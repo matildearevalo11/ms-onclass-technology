@@ -1,7 +1,7 @@
 # Gradle
 .gradle/
 build/
-out/
+/out/
 
 # IDE
 .idea/
@@ -17,3 +17,7 @@ out/
 !.env.example
 *.log
 .DS_Store
+
+# Signing keys must never be versioned outside test fixtures
+*.pem
+!src/test/resources/keys/*.pem
