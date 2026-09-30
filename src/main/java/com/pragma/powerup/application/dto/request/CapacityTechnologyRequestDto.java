@@ -22,7 +22,8 @@ public class CapacityTechnologyRequestDto {
 
     @NotNull(message = "Technology IDs are required.")
     @Size(min = 3, max = 20, message = "A capacity must have between 3 and 20 technologies.")
-    private List<Long> technologyIds;
+    private List<@NotNull(message = "Technology ID is required.")
+            @Positive(message = "Technology ID must be positive.") Long> technologyIds;
 
     @JsonIgnore
     @AssertTrue(message = "Technologies must not be repeated.")

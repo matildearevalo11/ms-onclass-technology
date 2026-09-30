@@ -138,6 +138,35 @@ class OnClassApplicationTest {
         StepVerifier.create(associationRepository.count()).expectNext(0L).verifyComplete();
     }
 
+    @Test
+    void looksUpOnlyTechnologyIdsAndNamesForMultipleCapacities() {
+        var ids = repository.saveAll(List.of(
+                new com.pragma.powerup.infrastructure.out.r2dbc.entity.TechnologyEntity(null, "Java", "Language"),
+                new com.pragma.powerup.infrastructure.out.r2dbc.entity.TechnologyEntity(null, "SQL", "Database"),
+                new com.pragma.powerup.infrastructure.out.r2dbc.entity.TechnologyEntity(null, "Docker", "Containers")))
+                .map(com.pragma.powerup.infrastructure.out.r2dbc.entity.TechnologyEntity::id).collectList().block();
+        associate(10L, ids).expectStatus().isNoContent();
+        associate(20L, ids).expectStatus().isNoContent();
+
+        client.get().uri("/technologies/capacities?capacityIds=10,20,30")
+                .headers(headers -> headers.setBearerAuth(token("ADMIN")))
+                .exchange().expectStatus().isOk().expectBody()
+                .jsonPath("$[0].capacityId").isEqualTo(10)
+                .jsonPath("$[0].technologies.length()").isEqualTo(3)
+                .jsonPath("$[0].technologies[0].name").isEqualTo("Java")
+                .jsonPath("$[0].technologies[0].description").doesNotExist()
+                .jsonPath("$[1].capacityId").isEqualTo(20)
+                .jsonPath("$[2].capacityId").isEqualTo(30)
+                .jsonPath("$[2].technologies.length()").isEqualTo(0);
+
+        client.get().uri("/technologies/capacities?capacityIds=-1")
+                .headers(headers -> headers.setBearerAuth(token("ADMIN")))
+                .exchange().expectStatus().isBadRequest();
+        client.get().uri("/technologies/capacities?capacityIds=10")
+                .headers(headers -> headers.setBearerAuth(token("PERSON")))
+                .exchange().expectStatus().isForbidden();
+    }
+
     private WebTestClient.ResponseSpec associate(Long capacityId, List<Long> ids) {
         return client.post().uri("/technologies/capacities").headers(h -> h.setBearerAuth(token("ADMIN")))
                 .contentType(MediaType.APPLICATION_JSON)
