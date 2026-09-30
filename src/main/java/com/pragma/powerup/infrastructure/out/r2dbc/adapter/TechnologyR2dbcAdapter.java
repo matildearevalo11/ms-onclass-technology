@@ -1,5 +1,6 @@
 package com.pragma.powerup.infrastructure.out.r2dbc.adapter;
 
+import java.util.List;
 import com.pragma.powerup.domain.exception.ConflictException;
 import com.pragma.powerup.domain.exception.ExceptionMessages;
 import com.pragma.powerup.domain.model.Technology;
@@ -17,6 +18,11 @@ public class TechnologyR2dbcAdapter implements ITechnologyPersistencePort {
 
     private final ITechnologyRepository repository;
     private final TechnologyEntityMapper mapper;
+
+    @Override
+    public Mono<Long> countByIds(List<Long> ids) {
+        return repository.countByIdIn(ids);
+    }
 
     @Override
     public Mono<Boolean> existsByName(String name) {

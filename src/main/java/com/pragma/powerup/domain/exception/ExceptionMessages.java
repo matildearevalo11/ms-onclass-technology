@@ -6,6 +6,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum ExceptionMessages {
+    TECHNOLOGIES_NOT_FOUND("One or more technologies do not exist."),
+    TECHNOLOGIES_ALREADY_ASSOCIATED("The capacity already has associated technologies."),
     TECHNOLOGY_REQUIRED("Technology is required."),
     TECHNOLOGY_NAME_REQUIRED("Technology name is required."),
     TECHNOLOGY_DESCRIPTION_REQUIRED("Technology description is required."),

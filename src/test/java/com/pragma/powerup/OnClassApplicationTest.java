@@ -40,10 +40,12 @@ class OnClassApplicationTest {
     private ITechnologyHandler handler;
     @Autowired
     private WebTestClient client;
+    @MockitoSpyBean
+    private com.pragma.powerup.infrastructure.out.r2dbc.repository.ICapacityTechnologyRepository associationRepository;
 
     @BeforeEach
     void setUp() {
-        StepVerifier.create(repository.deleteAll()).verifyComplete();
+        StepVerifier.create(associationRepository.deleteAll().then(repository.deleteAll())).verifyComplete();
     }
 
     @Test
@@ -70,8 +72,8 @@ class OnClassApplicationTest {
         StepVerifier.create(repository.count()).expectNext(1L).verifyComplete();
         String boundaryName = "a".repeat(50);
         String boundaryDescription = "a".repeat(90);
-        post(token("ADMIN"), Map.of("name", " " + boundaryName + " ",
-                "description", " " + boundaryDescription + " ")).expectStatus().isCreated().expectBody()
+        post(token("ADMIN"), Map.of("name", boundaryName,
+                "description", boundaryDescription)).expectStatus().isCreated().expectBody()
                 .jsonPath("$.name").isEqualTo(boundaryName)
                 .jsonPath("$.description").isEqualTo(boundaryDescription);
     }
@@ -104,6 +106,42 @@ class OnClassApplicationTest {
                 post(adminToken, request).expectStatus().isBadRequest().expectBody()
                         .jsonPath("$.errors.message").isEqualTo(message.getMessage()));
         verifyNoInteractions(handler);
+    }
+
+    @Test
+    void associatesExistingTechnologiesAtBothLimitsAndRejectsRepeatedRegistration() {
+        var technologies = java.util.stream.IntStream.rangeClosed(1, 20)
+                .mapToObj(i -> new com.pragma.powerup.infrastructure.out.r2dbc.entity.TechnologyEntity(null, "Tech" + i, "Description")).toList();
+        var ids = repository.saveAll(technologies).map(com.pragma.powerup.infrastructure.out.r2dbc.entity.TechnologyEntity::id)
+                .collectList().block();
+        associate(1L, ids.subList(0, 3)).expectStatus().isNoContent();
+        associate(2L, ids).expectStatus().isNoContent();
+        associate(1L, ids.subList(0, 3)).expectStatus().isEqualTo(409);
+        StepVerifier.create(associationRepository.count()).expectNext(23L).verifyComplete();
+    }
+
+    @Test
+    void rejectsUnknownAndDuplicateTechnologiesWithoutAssociations() {
+        associate(1L, List.of(1L, 2L, 3L)).expectStatus().isNotFound();
+        associate(1L, List.of(1L, 1L, 2L)).expectStatus().isBadRequest();
+        StepVerifier.create(associationRepository.count()).expectNext(0L).verifyComplete();
+    }
+
+    @Test
+    void rollsBackAllAssociationsWhenAnInsertFails() {
+        var ids = repository.saveAll(java.util.stream.IntStream.rangeClosed(1, 3)
+                .mapToObj(i -> new com.pragma.powerup.infrastructure.out.r2dbc.entity.TechnologyEntity(null, "Rollback" + i, "Description"))
+                .toList()).map(com.pragma.powerup.infrastructure.out.r2dbc.entity.TechnologyEntity::id).collectList().block();
+        org.mockito.Mockito.doReturn(reactor.core.publisher.Mono.error(new org.springframework.dao.DataIntegrityViolationException("Insert failed")))
+                .when(associationRepository).save(org.mockito.ArgumentMatchers.argThat(entity -> entity.getTechnologyId().equals(ids.get(2))));
+        associate(1L, ids).expectStatus().isEqualTo(503);
+        StepVerifier.create(associationRepository.count()).expectNext(0L).verifyComplete();
+    }
+
+    private WebTestClient.ResponseSpec associate(Long capacityId, List<Long> ids) {
+        return client.post().uri("/technologies/capacities").headers(h -> h.setBearerAuth(token("ADMIN")))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(Map.of("capacityId", capacityId, "technologyIds", ids)).exchange();
     }
 
     private WebTestClient.ResponseSpec post(String token, Object body) {

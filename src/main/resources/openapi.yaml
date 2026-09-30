@@ -1,14 +1,15 @@
+---
 openapi: 3.1.0
 info:
   title: On-Class Technology API
   version: 1.0.0
   description: Microservicio de tecnologías.
 servers:
-  - url: /api/v1
+- url: "/api/v1"
 security:
-  - bearerAuth: []
+- bearerAuth: []
 paths:
-  /technologies:
+  "/technologies":
     post:
       operationId: createTechnology
       summary: Registrar tecnología
@@ -18,7 +19,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TechnologyRequest'
+              "$ref": "#/components/schemas/TechnologyRequest"
             example:
               name: Java
               description: Lenguaje de programación
@@ -28,30 +29,86 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TechnologyResponse'
+                "$ref": "#/components/schemas/TechnologyResponse"
         '400':
-          $ref: '#/components/responses/BadRequest'
+          "$ref": "#/components/responses/BadRequest"
         '401':
-          $ref: '#/components/responses/Unauthorized'
+          "$ref": "#/components/responses/Unauthorized"
         '403':
           description: Requiere rol ADMIN.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                "$ref": "#/components/schemas/ErrorResponse"
         '409':
           description: Ya existe una tecnología con ese nombre.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                "$ref": "#/components/schemas/ErrorResponse"
               example:
                 errors:
                   message: A technology with this name already exists.
         '500':
-          $ref: '#/components/responses/InternalError'
+          "$ref": "#/components/responses/InternalError"
         '503':
-          $ref: '#/components/responses/ServiceUnavailable'
+          "$ref": "#/components/responses/ServiceUnavailable"
+  "/technologies/capacities":
+    post:
+      operationId: associateCapacityTechnologies
+      summary: Asociar tecnologías
+      description: Asocia tecnologías existentes a una capacidad. Requiere rol ADMIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/CapacityTechnologyRequest"
+      responses:
+        '204':
+          description: Tecnologías asociadas.
+        '400':
+          description: IDs inválidos o repetidos.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '401':
+          description: Autenticación requerida.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Requiere rol ADMIN.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '404':
+          description: Una o más tecnologías no existen.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '409':
+          description: La capacidad ya tiene tecnologías asociadas.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '503':
+          description: Base de datos no disponible.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '500':
+          description: Error interno.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
 components:
   securitySchemes:
     bearerAuth:
@@ -62,7 +119,9 @@ components:
   schemas:
     TechnologyRequest:
       type: object
-      required: [name, description]
+      required:
+      - name
+      - description
       properties:
         name:
           type: string
@@ -78,7 +137,10 @@ components:
           example: Lenguaje de programación
     TechnologyResponse:
       type: object
-      required: [id, name, description]
+      required:
+      - id
+      - name
+      - description
       properties:
         id:
           type: integer
@@ -95,36 +157,64 @@ components:
           example: Lenguaje de programación
     ErrorResponse:
       type: object
-      required: [errors]
+      required:
+      - errors
       properties:
         errors:
           type: object
-          required: [message]
+          required:
+          - message
           properties:
             message:
               type: string
+    CapacityTechnologyRequest:
+      type: object
+      required:
+      - capacityId
+      - technologyIds
+      properties:
+        capacityId:
+          type: integer
+          format: int64
+          minimum: 1
+          description: ID de la capacidad.
+          example: 1
+        technologyIds:
+          type: array
+          minItems: 3
+          maxItems: 20
+          uniqueItems: true
+          items:
+            type: integer
+            format: int64
+            minimum: 1
+          example:
+          - 1
+          - 2
+          - 3
+          description: Entre 3 y 20 tecnologías existentes, sin repetidas.
   responses:
     BadRequest:
       description: Solicitud inválida.
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            "$ref": "#/components/schemas/ErrorResponse"
     Unauthorized:
       description: Autenticación fallida.
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            "$ref": "#/components/schemas/ErrorResponse"
     InternalError:
       description: Error interno del servidor.
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            "$ref": "#/components/schemas/ErrorResponse"
     ServiceUnavailable:
       description: No se pudo completar la operación en la base de datos.
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            "$ref": "#/components/schemas/ErrorResponse"

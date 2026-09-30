@@ -28,7 +28,7 @@ public class SecurityConfiguration {
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/openapi.yaml", "/v3/api-docs/swagger-config", "/webjars/swagger-ui/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        .pathMatchers(HttpMethod.POST, "/technologies").hasRole("ADMIN")
+                        .pathMatchers(HttpMethod.POST, "/technologies", "/technologies/capacities").hasRole("ADMIN")
                         .anyExchange().denyAll())
                 .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(errors).accessDeniedHandler(errors))
                 .oauth2ResourceServer(resource -> resource
