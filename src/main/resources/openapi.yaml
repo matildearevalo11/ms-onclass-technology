@@ -54,6 +54,35 @@ paths:
         '503':
           "$ref": "#/components/responses/ServiceUnavailable"
   "/technologies/capacities":
+    delete:
+      operationId: deleteCapacityTechnologies
+      summary: Eliminar asociaciones de capacidades
+      description: Elimina las asociaciones de las capacidades indicadas y las tecnologías que ya no usa ninguna capacidad. Requiere rol ADMIN.
+      parameters:
+      - name: capacityIds
+        in: query
+        required: true
+        description: IDs de capacidades separados por coma.
+        schema:
+          type: array
+          minItems: 1
+          items:
+            type: integer
+            format: int64
+            minimum: 1
+        style: form
+        explode: false
+      responses:
+        '204':
+          description: Asociaciones eliminadas.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Requiere rol ADMIN.
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
     get:
       operationId: listCapacityTechnologies
       summary: Listar tecnologías por capacidad

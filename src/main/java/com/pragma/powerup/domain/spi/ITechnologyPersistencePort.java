@@ -9,4 +9,5 @@ public interface ITechnologyPersistencePort {
     Mono<Boolean> existsByName(String name);
 
     Mono<Technology> save(Technology technology);
+    Mono<Void> deleteByIds(List<Long> ids);
 }

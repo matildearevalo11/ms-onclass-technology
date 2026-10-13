@@ -27,7 +27,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
-    runtimeOnly 'io.asyncer:r2dbc-mysql:1.4.3'
+    runtimeOnly 'org.postgresql:r2dbc-postgresql'
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
@@ -75,17 +75,17 @@ check.dependsOn jacocoTestReport, jacocoTestCoverageVerification
 
 test {
     useJUnitPlatform {
-        excludeTags 'mysql'
+        excludeTags 'postgres'
     }
 }
 
-tasks.register('mysqlTest', Test) {
-    description = 'Runs integration tests against an isolated MySQL 8 database.'
+tasks.register('postgresTest', Test) {
+    description = 'Runs integration tests against an isolated PostgreSQL database.'
     group = 'verification'
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
     useJUnitPlatform {
-        includeTags 'mysql'
+        includeTags 'postgres'
     }
     shouldRunAfter test
     outputs.upToDateWhen { false }
