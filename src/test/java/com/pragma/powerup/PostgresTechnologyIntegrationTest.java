@@ -15,9 +15,9 @@ import reactor.test.StepVerifier;
 
 @org.springframework.context.annotation.Import(JwtTestConfiguration.class)
 @SpringBootTest
-@Tag("mysql")
-@ActiveProfiles("mysql-test")
-class MySqlTechnologyIntegrationTest {
+@Tag("postgres")
+@ActiveProfiles("postgres-test")
+class PostgresTechnologyIntegrationTest {
 
     @Autowired
     private ITechnologyPersistencePort persistencePort;

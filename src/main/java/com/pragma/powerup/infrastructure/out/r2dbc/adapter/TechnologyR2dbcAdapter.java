@@ -20,6 +20,11 @@ public class TechnologyR2dbcAdapter implements ITechnologyPersistencePort {
     private final TechnologyEntityMapper mapper;
 
     @Override
+    public Mono<Void> deleteByIds(List<Long> ids) {
+        return repository.deleteAllById(ids);
+    }
+
+    @Override
     public Mono<Long> countByIds(List<Long> ids) {
         return repository.countByIdIn(ids);
     }

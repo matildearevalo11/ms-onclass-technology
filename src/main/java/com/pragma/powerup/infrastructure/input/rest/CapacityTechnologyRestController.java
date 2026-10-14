@@ -3,6 +3,7 @@ package com.pragma.powerup.infrastructure.input.rest;
 import com.pragma.powerup.application.dto.request.CapacityTechnologyRequestDto;
 import com.pragma.powerup.application.handler.ICapacityTechnologyHandler;
 import com.pragma.powerup.application.handler.ICapacityTechnologyListHandler;
+import com.pragma.powerup.application.handler.ICapacityTechnologyDeleteHandler;
 import com.pragma.powerup.application.dto.request.CapacityTechnologyListRequestDto;
 import com.pragma.powerup.application.dto.response.CapacityTechnologyListResponseDto;
 import jakarta.validation.Valid;
@@ -11,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,6 +27,13 @@ import reactor.core.publisher.Flux;
 public class CapacityTechnologyRestController {
     private final ICapacityTechnologyHandler handler;
     private final ICapacityTechnologyListHandler listHandler;
+    private final ICapacityTechnologyDeleteHandler deleteHandler;
+
+    @DeleteMapping
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public Mono<Void> deleteForCapacities(@Valid @ModelAttribute CapacityTechnologyListRequestDto request) {
+        return deleteHandler.deleteForCapacities(request.getCapacityIds());
+    }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public Flux<CapacityTechnologyListResponseDto> listByCapacityIds(

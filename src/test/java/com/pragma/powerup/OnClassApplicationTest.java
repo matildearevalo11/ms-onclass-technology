@@ -139,6 +139,32 @@ class OnClassApplicationTest {
     }
 
     @Test
+    void deletesExclusiveTechnologiesAndKeepsSharedOnes() {
+        var ids = repository.saveAll(List.of(
+                new com.pragma.powerup.infrastructure.out.r2dbc.entity.TechnologyEntity(null, "Java", "Language"),
+                new com.pragma.powerup.infrastructure.out.r2dbc.entity.TechnologyEntity(null, "SQL", "Database"),
+                new com.pragma.powerup.infrastructure.out.r2dbc.entity.TechnologyEntity(null, "Docker", "Containers"),
+                new com.pragma.powerup.infrastructure.out.r2dbc.entity.TechnologyEntity(null, "Kotlin", "Language")))
+                .map(com.pragma.powerup.infrastructure.out.r2dbc.entity.TechnologyEntity::id).collectList().block();
+        associate(10L, ids.subList(0, 3)).expectStatus().isNoContent();
+        associate(20L, ids.subList(1, 4)).expectStatus().isNoContent();
+
+        client.delete().uri("/technologies/capacities?capacityIds=10")
+                .headers(headers -> headers.setBearerAuth(token("ADMIN")))
+                .exchange().expectStatus().isNoContent();
+        StepVerifier.create(repository.count()).expectNext(3L).verifyComplete();
+        StepVerifier.create(associationRepository.count()).expectNext(3L).verifyComplete();
+        client.get().uri("/technologies/capacities?capacityIds=20")
+                .headers(headers -> headers.setBearerAuth(token("ADMIN"))).exchange()
+                .expectStatus().isOk().expectBody().jsonPath("$[0].technologies.length()").isEqualTo(3);
+
+        client.delete().uri("/technologies/capacities?capacityIds=20")
+                .headers(headers -> headers.setBearerAuth(token("ADMIN")))
+                .exchange().expectStatus().isNoContent();
+        StepVerifier.create(repository.count()).expectNext(0L).verifyComplete();
+    }
+
+    @Test
     void looksUpOnlyTechnologyIdsAndNamesForMultipleCapacities() {
         var ids = repository.saveAll(List.of(
                 new com.pragma.powerup.infrastructure.out.r2dbc.entity.TechnologyEntity(null, "Java", "Language"),

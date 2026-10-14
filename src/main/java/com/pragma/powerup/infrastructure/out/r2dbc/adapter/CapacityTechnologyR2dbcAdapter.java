@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
@@ -24,5 +25,20 @@ public class CapacityTechnologyR2dbcAdapter implements ICapacityTechnologyPersis
         return Flux.fromIterable(association.getTechnologyIds())
                 .concatMap(id -> repository.save(new CapacityTechnologyEntity(null, association.getCapacityId(), id)))
                 .then();
+    }
+
+    @Override
+    public Flux<Long> findTechnologyIdsByCapacityIds(List<Long> capacityIds) {
+        return repository.findTechnologyIdsByCapacityIds(capacityIds);
+    }
+
+    @Override
+    public Mono<Void> deleteByCapacityIds(List<Long> capacityIds) {
+        return repository.deleteByCapacityIds(capacityIds);
+    }
+
+    @Override
+    public Flux<Long> findReferencedTechnologyIds(List<Long> technologyIds) {
+        return repository.findReferencedTechnologyIds(technologyIds);
     }
 }
