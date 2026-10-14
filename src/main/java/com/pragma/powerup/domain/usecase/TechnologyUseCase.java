@@ -15,9 +15,12 @@ public class TechnologyUseCase implements ITechnologyServicePort {
 
     @Override
     public Mono<Technology> createTechnology(Technology technology) {
-        return Mono.defer(() -> persistencePort.existsByName(technology.name())
+        return Mono.defer(() -> {
+            var normalized = new Technology(null, technology.name().strip(), technology.description().strip());
+            return persistencePort.existsByName(normalized.name())
                 .flatMap(exists -> exists
                         ? Mono.error(new ConflictException(ExceptionMessages.TECHNOLOGY_ALREADY_EXISTS.getMessage()))
-                        : persistencePort.save(new Technology(null, technology.name(), technology.description()))));
+                        : persistencePort.save(normalized));
+        });
     }
 }
