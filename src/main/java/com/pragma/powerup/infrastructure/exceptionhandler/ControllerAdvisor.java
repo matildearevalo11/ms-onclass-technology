@@ -1,6 +1,7 @@
 package com.pragma.powerup.infrastructure.exceptionhandler;
 
 import com.pragma.powerup.domain.exception.ConflictException;
+import com.pragma.powerup.domain.exception.NotFoundException;
 import com.pragma.powerup.domain.exception.ExceptionMessages;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
@@ -22,6 +23,11 @@ public class ControllerAdvisor {
                 .map(DefaultMessageSourceResolvable::getDefaultMessage)
                 .findFirst().orElse(ExceptionMessages.INVALID_REQUEST.getMessage());
         return ResponseEntity.badRequest().body(ErrorResponse.from(message));
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ErrorResponse> notFound(NotFoundException exception) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ErrorResponse.from(exception.getMessage()));
     }
 
     @ExceptionHandler(ConflictException.class)
