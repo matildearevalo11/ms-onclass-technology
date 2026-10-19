@@ -18,7 +18,7 @@ public class TechnologyUseCase implements ITechnologyServicePort {
         return Mono.defer(() -> {
             var normalized = new Technology(null, technology.name().strip(), technology.description().strip());
             return persistencePort.existsByName(normalized.name())
-                .flatMap(exists -> exists
+                .flatMap(exists -> Boolean.TRUE.equals(exists)
                         ? Mono.error(new ConflictException(ExceptionMessages.TECHNOLOGY_ALREADY_EXISTS.getMessage()))
                         : persistencePort.save(normalized));
         });

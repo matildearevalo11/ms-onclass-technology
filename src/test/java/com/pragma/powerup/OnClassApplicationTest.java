@@ -3,6 +3,7 @@ package com.pragma.powerup;
 import com.pragma.powerup.domain.exception.ExceptionMessages;
 import com.pragma.powerup.application.handler.ITechnologyHandler;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verifyNoInteractions;
 import com.pragma.powerup.infrastructure.out.r2dbc.repository.ITechnologyRepository;
 import java.time.Instant;
@@ -132,7 +133,7 @@ class OnClassApplicationTest {
         var ids = repository.saveAll(java.util.stream.IntStream.rangeClosed(1, 3)
                 .mapToObj(i -> new com.pragma.powerup.infrastructure.out.r2dbc.entity.TechnologyEntity(null, "Rollback" + i, "Description"))
                 .toList()).map(com.pragma.powerup.infrastructure.out.r2dbc.entity.TechnologyEntity::id).collectList().block();
-        org.mockito.Mockito.doReturn(reactor.core.publisher.Mono.error(new org.springframework.dao.DataIntegrityViolationException("Insert failed")))
+        doReturn(reactor.core.publisher.Mono.error(new org.springframework.dao.DataIntegrityViolationException("Insert failed")))
                 .when(associationRepository).save(org.mockito.ArgumentMatchers.argThat(entity -> entity.getTechnologyId().equals(ids.get(2))));
         associate(1L, ids).expectStatus().isEqualTo(503);
         StepVerifier.create(associationRepository.count()).expectNext(0L).verifyComplete();
