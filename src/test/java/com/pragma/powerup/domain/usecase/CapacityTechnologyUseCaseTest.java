@@ -47,4 +47,38 @@ class CapacityTechnologyUseCaseTest {
         verifyNoInteractions(technologies);
         verify(associations, never()).save(any());
     }
+
+    @Test
+    void acceptsTheTechnologyCountLimits() {
+        for (int count : new int[] {3, 20}) {
+            var technologies = mock(ITechnologyPersistencePort.class);
+            var associations = mock(ICapacityTechnologyPersistencePort.class);
+            var request = new CapacityTechnologies(1L, java.util.stream.LongStream.rangeClosed(1, count).boxed().toList());
+            when(associations.existsByCapacityId(1L)).thenReturn(Mono.just(false));
+            when(technologies.countByIds(request.getTechnologyIds())).thenReturn(Mono.just((long) count));
+            when(associations.save(request)).thenReturn(Mono.empty());
+
+            StepVerifier.create(new CapacityTechnologyUseCase(technologies, associations).associate(request))
+                    .verifyComplete();
+        }
+    }
+
+    @Test
+    void rejectsInvalidAssociationsBeforeQueryingPersistence() {
+        var invalid = List.of(
+                new CapacityTechnologies(1L, List.of(1L, 2L)),
+                new CapacityTechnologies(1L, java.util.stream.LongStream.rangeClosed(1, 21).boxed().toList()),
+                new CapacityTechnologies(1L, List.of(1L, 1L, 2L)),
+                new CapacityTechnologies(1L, List.of(0L, 2L, 3L)),
+                new CapacityTechnologies(1L, java.util.Arrays.asList(1L, null, 3L)),
+                new CapacityTechnologies(1L, null),
+                new CapacityTechnologies(null, List.of(1L, 2L, 3L)));
+        var technologies = mock(ITechnologyPersistencePort.class);
+        var associations = mock(ICapacityTechnologyPersistencePort.class);
+
+        invalid.forEach(request -> StepVerifier.create(
+                        new CapacityTechnologyUseCase(technologies, associations).associate(request))
+                .expectError(com.pragma.powerup.domain.exception.ValidationException.class).verify());
+        verifyNoInteractions(technologies, associations);
+    }
 }
