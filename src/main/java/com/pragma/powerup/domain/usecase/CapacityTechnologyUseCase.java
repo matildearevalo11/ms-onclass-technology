@@ -18,7 +18,7 @@ public class CapacityTechnologyUseCase implements ICapacityTechnologyServicePort
     @Override
     public Mono<Void> associate(CapacityTechnologies association) {
         return associationPort.existsByCapacityId(association.getCapacityId())
-                .flatMap(exists -> exists
+                .flatMap(exists -> Boolean.TRUE.equals(exists)
                         ? Mono.error(new ConflictException(ExceptionMessages.TECHNOLOGIES_ALREADY_ASSOCIATED.getMessage()))
                         : technologyPort.countByIds(association.getTechnologyIds()))
                 .flatMap(count -> count == association.getTechnologyIds().size()

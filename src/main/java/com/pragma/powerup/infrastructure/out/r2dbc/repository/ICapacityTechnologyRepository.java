@@ -19,9 +19,6 @@ public interface ICapacityTechnologyRepository extends ReactiveCrudRepository<Ca
     @Query("SELECT DISTINCT technology_id FROM capacity_technologies WHERE capacity_id IN (:capacityIds)")
     Flux<Long> findTechnologyIdsByCapacityIds(List<Long> capacityIds);
 
-    @Query("SELECT DISTINCT technology_id FROM capacity_technologies WHERE technology_id IN (:technologyIds)")
-    Flux<Long> findReferencedTechnologyIds(List<Long> technologyIds);
-
     @Query("DELETE FROM capacity_technologies WHERE capacity_id IN (:capacityIds)")
     @Modifying
     Mono<Void> deleteByCapacityIds(List<Long> capacityIds);

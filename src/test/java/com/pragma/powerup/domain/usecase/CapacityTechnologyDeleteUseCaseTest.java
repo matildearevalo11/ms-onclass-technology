@@ -11,21 +11,29 @@ import static org.mockito.Mockito.*;
 
 class CapacityTechnologyDeleteUseCaseTest {
     @Test
-    void deletesOnlyTechnologiesWithoutRemainingCapacityReferences() {
+    void deletesAssociationsBeforeRemovingUnreferencedTechnologies() {
         var associations = mock(ICapacityTechnologyPersistencePort.class);
         var technologies = mock(ITechnologyPersistencePort.class);
-        when(associations.findTechnologyIdsByCapacityIds(List.of(1L)))
-                .thenReturn(Flux.just(10L, 20L, 20L));
+        when(associations.findTechnologyIdsByCapacityIds(List.of(1L))).thenReturn(Flux.just(10L, 20L));
         when(associations.deleteByCapacityIds(List.of(1L))).thenReturn(Mono.empty());
-        when(associations.findReferencedTechnologyIds(List.of(10L, 20L)))
-                .thenReturn(Flux.just(20L));
-        when(technologies.deleteByIds(List.of(10L))).thenReturn(Mono.empty());
+        when(technologies.deleteUnreferencedByIds(List.of(10L, 20L))).thenReturn(Mono.empty());
 
         StepVerifier.create(new CapacityTechnologyDeleteUseCase(associations, technologies)
                 .deleteForCapacities(List.of(1L))).verifyComplete();
         var order = inOrder(associations, technologies);
         order.verify(associations).deleteByCapacityIds(List.of(1L));
-        order.verify(associations).findReferencedTechnologyIds(List.of(10L, 20L));
-        order.verify(technologies).deleteByIds(List.of(10L));
+        order.verify(technologies).deleteUnreferencedByIds(List.of(10L, 20L));
+    }
+
+    @Test
+    void skipsTechnologyCleanupWhenCapacitiesHadNoTechnologies() {
+        var associations = mock(ICapacityTechnologyPersistencePort.class);
+        var technologies = mock(ITechnologyPersistencePort.class);
+        when(associations.findTechnologyIdsByCapacityIds(List.of(1L))).thenReturn(Flux.empty());
+        when(associations.deleteByCapacityIds(List.of(1L))).thenReturn(Mono.empty());
+
+        StepVerifier.create(new CapacityTechnologyDeleteUseCase(associations, technologies)
+                .deleteForCapacities(List.of(1L))).verifyComplete();
+        verifyNoInteractions(technologies);
     }
 }

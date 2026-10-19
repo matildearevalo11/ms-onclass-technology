@@ -14,14 +14,9 @@ public class CapacityTechnologyDeleteUseCase implements ICapacityTechnologyDelet
 
     @Override
     public Mono<Void> deleteForCapacities(List<Long> capacityIds) {
-        return associations.findTechnologyIdsByCapacityIds(capacityIds).distinct().collectList()
+        return associations.findTechnologyIdsByCapacityIds(capacityIds).collectList()
                 .flatMap(ids -> associations.deleteByCapacityIds(capacityIds)
-                        .then(ids.isEmpty() ? Mono.empty()
-                                : associations.findReferencedTechnologyIds(ids).collectList()
-                                        .flatMap(referenced -> {
-                                            List<Long> orphanIds = ids.stream()
-                                                    .filter(id -> !referenced.contains(id)).toList();
-                                            return orphanIds.isEmpty() ? Mono.empty() : technologies.deleteByIds(orphanIds);
-                                        })));
+                        .then(Mono.defer(() -> ids.isEmpty()
+                                ? Mono.<Void>empty() : technologies.deleteUnreferencedByIds(ids))));
     }
 }
