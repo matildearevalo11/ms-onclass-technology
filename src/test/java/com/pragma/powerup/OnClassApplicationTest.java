@@ -1,10 +1,8 @@
 package com.pragma.powerup;
 
 import com.pragma.powerup.domain.exception.ExceptionMessages;
-import com.pragma.powerup.application.handler.ITechnologyHandler;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.verifyNoInteractions;
 import com.pragma.powerup.infrastructure.out.r2dbc.repository.ITechnologyRepository;
 import java.time.Instant;
 import java.util.List;
@@ -37,8 +35,6 @@ class OnClassApplicationTest {
     private ITechnologyRepository repository;
     @Autowired
     private JwtEncoder encoder;
-    @MockitoSpyBean
-    private ITechnologyHandler handler;
     @Autowired
     private WebTestClient client;
     @MockitoSpyBean
@@ -96,7 +92,7 @@ class OnClassApplicationTest {
     }
 
     @Test
-    void rejectsInvalidRequestsBeforeCallingTheHandler() {
+    void rejectsInvalidTechnologiesWithoutPersistingThem() {
         var invalidRequests = Map.of(
                 Map.of("name", "Java"), ExceptionMessages.TECHNOLOGY_DESCRIPTION_REQUIRED,
                 Map.of("name", " ", "description", "Language"), ExceptionMessages.TECHNOLOGY_NAME_REQUIRED,
@@ -106,7 +102,7 @@ class OnClassApplicationTest {
         invalidRequests.forEach((request, message) ->
                 post(adminToken, request).expectStatus().isBadRequest().expectBody()
                         .jsonPath("$.errors.message").isEqualTo(message.getMessage()));
-        verifyNoInteractions(handler);
+        StepVerifier.create(repository.count()).expectNext(0L).verifyComplete();
     }
 
     @Test

@@ -12,7 +12,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class CapacityTechnologyListRequestDto {
-    @NotEmpty(message = "Capacity IDs are required.")
-    private List<@NotNull(message = "Capacity ID is required.")
-            @Positive(message = "Capacity ID must be positive.") Long> capacityIds;
+    @NotEmpty(message = ValidationMessages.CAPACITY_IDS_REQUIRED)
+    private List<@NotNull(message = ValidationMessages.CAPACITY_ID_REQUIRED)
+            @Positive(message = ValidationMessages.CAPACITY_ID_POSITIVE) Long> capacityIds;
 }

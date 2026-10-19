@@ -1,5 +1,7 @@
 package com.pragma.powerup.infrastructure.configuration;
 
+import com.pragma.powerup.infrastructure.constants.ApiPaths;
+import com.pragma.powerup.infrastructure.constants.SecurityConstants;
 import com.pragma.powerup.infrastructure.security.SecurityErrorHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,15 +15,12 @@ import org.springframework.security.web.server.context.NoOpServerSecurityContext
 
 @Configuration
 public class SecurityConfiguration {
-    private static final String ADMIN = "ADMIN";
-    private static final String CAPACITY_TECHNOLOGIES = "/technologies/capacities";
-
 
     @Bean
     SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http, SecurityErrorHandler errors) {
         JwtGrantedAuthoritiesConverter roles = new JwtGrantedAuthoritiesConverter();
-        roles.setAuthoritiesClaimName("role");
-        roles.setAuthorityPrefix("ROLE_");
+        roles.setAuthoritiesClaimName(SecurityConstants.ROLE_CLAIM);
+        roles.setAuthorityPrefix(SecurityConstants.ROLE_PREFIX);
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(roles);
         return http
@@ -30,10 +29,10 @@ public class SecurityConfiguration {
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/openapi.yaml", "/v3/api-docs/swagger-config", "/webjars/swagger-ui/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        .pathMatchers(HttpMethod.POST, "/technologies", CAPACITY_TECHNOLOGIES).hasRole(ADMIN)
-                        .pathMatchers(HttpMethod.GET, CAPACITY_TECHNOLOGIES).hasRole(ADMIN)
-                        .pathMatchers(HttpMethod.DELETE, CAPACITY_TECHNOLOGIES).hasRole(ADMIN)
+                        .pathMatchers(ApiPaths.documentation()).permitAll()
+                        .pathMatchers(HttpMethod.POST, ApiPaths.TECHNOLOGIES, ApiPaths.CAPACITY_TECHNOLOGIES).hasRole(SecurityConstants.ADMIN)
+                        .pathMatchers(HttpMethod.GET, ApiPaths.CAPACITY_TECHNOLOGIES).hasRole(SecurityConstants.ADMIN)
+                        .pathMatchers(HttpMethod.DELETE, ApiPaths.CAPACITY_TECHNOLOGIES).hasRole(SecurityConstants.ADMIN)
                         .anyExchange().denyAll())
                 .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(errors).accessDeniedHandler(errors))
                 .oauth2ResourceServer(resource -> resource
