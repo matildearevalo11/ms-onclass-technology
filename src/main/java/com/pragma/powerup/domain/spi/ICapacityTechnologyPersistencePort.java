@@ -10,5 +10,4 @@ public interface ICapacityTechnologyPersistencePort {
     Mono<Void> save(CapacityTechnologies association);
     Flux<Long> findTechnologyIdsByCapacityIds(List<Long> capacityIds);
     Mono<Void> deleteByCapacityIds(List<Long> capacityIds);
-    Flux<Long> findReferencedTechnologyIds(List<Long> technologyIds);
 }

@@ -36,9 +36,4 @@ public class CapacityTechnologyR2dbcAdapter implements ICapacityTechnologyPersis
     public Mono<Void> deleteByCapacityIds(List<Long> capacityIds) {
         return repository.deleteByCapacityIds(capacityIds);
     }
-
-    @Override
-    public Flux<Long> findReferencedTechnologyIds(List<Long> technologyIds) {
-        return repository.findReferencedTechnologyIds(technologyIds);
-    }
 }
